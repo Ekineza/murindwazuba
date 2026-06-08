@@ -20,6 +20,7 @@
             transition: background 0.5s ease;
         }
 
+        /* Mode sombre braise (badboy touch) */
         body.braise-mode {
             background: #000000;
             filter: contrast(1.05);
@@ -29,6 +30,22 @@
             box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
         }
 
+        /* Vidéo d'arrière-plan */
+        #bgVideo {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0;
+            filter: brightness(0.35) contrast(1.1) saturate(0.9);
+            transition: filter 0.5s ease;
+        }
+        body.braise-mode #bgVideo {
+            filter: brightness(0.2) contrast(1.2) saturate(1.2);
+        }
+
         canvas {
             position: fixed;
             top: 0;
@@ -36,9 +53,10 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 0;
+            z-index: 1;
         }
 
+        /* Main container */
         .container {
             position: relative;
             z-index: 10;
@@ -53,10 +71,16 @@
             justify-content: center;
         }
 
+        /* Étapes */
         .step {
             display: none;
             animation: fadeSlide 0.6s ease;
             width: 100%;
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(8px);
+            border-radius: 32px;
+            padding: 2rem 1.5rem;
+            border: 1px solid rgba(212,175,55,0.3);
         }
         .step.active-step {
             display: block;
@@ -67,6 +91,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* Rose noire 3D */
         .rose-container {
             display: flex;
             justify-content: center;
@@ -120,9 +145,8 @@
             font-weight: bold;
             padding: 12px 28px;
             border-radius: 40px;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             cursor: pointer;
-            margin-top: 2rem;
             transition: 0.2s;
             font-family: monospace;
         }
@@ -130,7 +154,24 @@
             transform: scale(1.02);
             box-shadow: 0 0 15px #D4AF37;
         }
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid #D4AF37;
+            color: #D4AF37;
+            margin-right: 1rem;
+        }
+        .btn-secondary:hover {
+            background: rgba(212,175,55,0.2);
+        }
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
 
+        /* Refus */
         .refusal-area {
             display: flex;
             justify-content: center;
@@ -171,6 +212,7 @@
             box-shadow: 0 0 10px gold;
         }
 
+        /* Destinations */
         .cards {
             display: flex;
             gap: 2rem;
@@ -182,8 +224,8 @@
             backdrop-filter: blur(5px);
             border: 1px solid #D4AF37;
             border-radius: 32px;
-            padding: 1.5rem;
-            width: 180px;
+            padding: 1rem;
+            width: 200px;
             text-align: center;
             cursor: pointer;
             transition: 0.2s;
@@ -192,7 +234,16 @@
             transform: translateY(-8px);
             background: #0B1E33;
         }
+        .city-image {
+            width: 100%;
+            height: 120px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 16px;
+            margin-bottom: 10px;
+        }
 
+        /* Activités */
         .chips-container {
             display: flex;
             flex-wrap: wrap;
@@ -212,7 +263,6 @@
             color: black;
             box-shadow: 0 0 12px gold;
         }
-
         .badge-act {
             display: inline-block;
             background: #D4AF37;
@@ -233,7 +283,22 @@
             font-family: 'Cedarville Cursive', cursive;
             font-size: 1rem;
         }
+        .char-counter {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .beating-heart {
+            animation: heartbeat 1s infinite;
+            display: inline-block;
+        }
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
 
+        /* Audio toggle */
         .audio-toggle {
             position: fixed;
             bottom: 20px;
@@ -252,39 +317,35 @@
             backdrop-filter: blur(5px);
         }
 
-        .gold-trail {
-            position: fixed;
-            width: 8px;
-            height: 8px;
-            background: radial-gradient(circle, gold, transparent);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 999;
-        }
-
-        footer {
-            text-align: center;
-            margin-top: 2rem;
-        }
         @media (max-width: 600px) {
             .container { padding: 1rem; }
-            .dest-card { width: 140px; }
+            .dest-card { width: 160px; }
         }
     </style>
 </head>
 <body>
+<video id="bgVideo" autoplay muted loop playsinline></video>
 <canvas id="bgCanvas"></canvas>
-<div id="goldTrailContainer"></div>
 <div class="audio-toggle" id="audioToggle">🎧</div>
 <div class="container" id="app"></div>
 
 <script>
+    // ---------- VIDÉO ----------
+    const videoElement = document.getElementById('bgVideo');
+    // On attend que l'utilisateur ait uploadé une vidéo nommée "muri.mp4" sur GitHub
+    // Si elle n'existe pas, on met un fond sombre.
+    videoElement.src = 'muri.mp4';
+    videoElement.onerror = () => {
+        console.log("Vidéo non trouvée, fond sombre par défaut");
+        videoElement.style.display = 'none';
+    };
+    videoElement.play().catch(e => console.log("autoplay bloqué"));
+
+    // ---------- AUDIO ----------
     let audioCtx = null;
     let isAudioAllowed = false;
     let pianoGain, waveGain, violinGain;
-    let pianoBuffer = null, waveBuffer = null;
     let currentPianoVol = 0.3;
-    let audioEnabled = false;
     let toggleMuted = false;
     
     function initAudio() {
@@ -299,7 +360,6 @@
         pianoGain.connect(audioCtx.destination);
         waveGain.connect(audioCtx.destination);
         violinGain.connect(audioCtx.destination);
-        
         function createPianoLoop() {
             const duration = 4;
             const sampleRate = audioCtx.sampleRate;
@@ -326,12 +386,12 @@
             }
             return buffer;
         }
-        pianoBuffer = createPianoLoop();
-        waveBuffer = createWavePad();
-        function playLoop(buffer, gainNode, loop=true) {
+        const pianoBuffer = createPianoLoop();
+        const waveBuffer = createWavePad();
+        function playLoop(buffer, gainNode) {
             const src = audioCtx.createBufferSource();
             src.buffer = buffer;
-            src.loop = loop;
+            src.loop = true;
             src.connect(gainNode);
             src.start();
         }
@@ -339,12 +399,8 @@
         playLoop(waveBuffer, waveGain);
         updatePianoVolume(currentPianoVol);
     }
-    
     function updatePianoVolume(vol) {
         if(pianoGain) pianoGain.gain.value = vol * (toggleMuted ? 0 : 1);
-    }
-    function updateWaveVolume(vol) {
-        if(waveGain) waveGain.gain.value = vol * (toggleMuted ? 0 : 1);
     }
     function playViolinNote() {
         if(!audioCtx || toggleMuted) return;
@@ -385,25 +441,39 @@
             osc2.stop(audioCtx.currentTime+0.4);
         },400);
     }
+    function createGoldTrail() {
+        const trail = document.createElement('div');
+        trail.className = 'gold-trail';
+        trail.style.position = 'fixed';
+        trail.style.width = '8px';
+        trail.style.height = '8px';
+        trail.style.background = 'radial-gradient(circle, gold, transparent)';
+        trail.style.borderRadius = '50%';
+        trail.style.pointerEvents = 'none';
+        trail.style.left = (Math.random()*window.innerWidth)+'px';
+        trail.style.top = (Math.random()*window.innerHeight)+'px';
+        document.body.appendChild(trail);
+        setTimeout(()=>trail.remove(),600);
+    }
 
+    // ---------- ÉTAT ----------
     let stepIndex = 0;
     let userData = {
         destination: null,
         date: null,
         activities: [],
-        message: "",
-        finalStepRevealed: false
+        message: ""
     };
     let noClickCount = 0;
     let braiseActive = false;
-    
+    let audioEnabled = false;
     const app = document.getElementById('app');
     
     function saveToLocal() {
-        localStorage.setItem('romeo_juliet_muri', JSON.stringify({stepIndex, userData, braiseActive}));
+        localStorage.setItem('romeo_juliette_muri', JSON.stringify({stepIndex, userData, braiseActive}));
     }
     function loadLocal() {
-        const data = localStorage.getItem('romeo_juliet_muri');
+        const data = localStorage.getItem('romeo_juliette_muri');
         if(data) {
             try{
                 const parsed = JSON.parse(data);
@@ -415,6 +485,18 @@
         }
     }
     
+    function nextStep() {
+        stepIndex++;
+        saveToLocal();
+        render();
+    }
+    function prevStep() {
+        if(stepIndex > 0) stepIndex--;
+        saveToLocal();
+        render();
+    }
+    
+    // Render steps
     function render() {
         if(stepIndex === 0) renderStep0();
         else if(stepIndex === 1) renderStep1();
@@ -425,426 +507,158 @@
         else if(stepIndex === 6) renderFinal();
     }
     
-    function nextStep() {
-        stepIndex++;
-        saveToLocal();
-        render();
-    }
-    
     function renderStep0() {
         app.innerHTML = `
             <div class="step active-step">
-                <div class="rose-container">
-                    <div class="rose-3d" id="blackRose"></div>
-                </div>
-                <div class="handwritten">
-                    "Muri, même les anges tombent... et moi je tombe pour toi."<br>
-                    — ton ombre & ta lumière
-                </div>
-                <div id="petals-fall-area" style="text-align:center; margin:10px"></div>
-                <button class="btn-chapter" id="nextChap">💋 Déchirer le voile du silence</button>
+                <div class="rose-container"><div class="rose-3d" id="blackRose"></div></div>
+                <div class="handwritten">"Un an plus tard, je ne cherche plus l'amour,<br>je constate ce qu'il est devenu."<br>— ton ombre & ta lumière</div>
+                <div class="button-group"><button class="btn-chapter" id="nextChap">💋 Déchirer le voile du silence 🌹</button></div>
             </div>
         `;
-        const roseDiv = document.getElementById('blackRose');
-        let petalInterval = null;
-        if(roseDiv) {
-            roseDiv.addEventListener('mouseenter', ()=>{
-                if(petalInterval) clearInterval(petalInterval);
-                let count = 0;
-                petalInterval = setInterval(()=>{
-                    const petal = document.createElement('div');
-                    petal.innerText = '🌹';
-                    petal.style.position = 'fixed';
-                    petal.style.left = (Math.random()*window.innerWidth) + 'px';
-                    petal.style.top = '0px';
-                    petal.style.fontSize = '18px';
-                    petal.style.opacity = '0.8';
-                    petal.style.pointerEvents = 'none';
-                    petal.style.zIndex = '999';
-                    petal.style.transition = 'all 2s ease';
-                    document.body.appendChild(petal);
-                    setTimeout(()=>{
-                        petal.style.transform = 'translateY(80vh) rotate(20deg)';
-                        petal.style.opacity = '0';
-                        setTimeout(()=>petal.remove(),2000);
-                    },10);
-                    count++;
-                    if(count>15) clearInterval(petalInterval);
-                },300);
-            });
-        }
-        document.getElementById('nextChap')?.addEventListener('click', ()=>{
-            if(petalInterval) clearInterval(petalInterval);
-            nextStep();
+        document.getElementById('nextChap')?.addEventListener('click', nextStep);
+        const rose = document.getElementById('blackRose');
+        if(rose) rose.addEventListener('mouseenter', ()=>{
+            for(let i=0;i<12;i++) {
+                const petal = document.createElement('div');
+                petal.innerText = '🌹';
+                petal.style.position='fixed';
+                petal.style.left=Math.random()*window.innerWidth+'px';
+                petal.style.top='0px';
+                petal.style.fontSize='18px';
+                petal.style.transition='all 2s';
+                petal.style.pointerEvents='none';
+                document.body.appendChild(petal);
+                setTimeout(()=>{petal.style.transform='translateY(90vh) rotate(20deg)'; petal.style.opacity='0'; setTimeout(()=>petal.remove(),2000);},10);
+            }
         });
     }
     
     function renderStep1() {
-        app.innerHTML = `
-            <div class="step active-step">
-                <h2 style="text-align:center">❤️‍🔥 Le jeu du refus</h2>
-                <div class="refusal-area">
-                    <button class="btn-yes" id="yesBtn">❤️ Bien sûr</button>
-                    <button class="btn-no" id="noBtn">🙈 Non</button>
-                </div>
-                <div id="badboyMsg" style="text-align:center; margin-top:1rem; min-height:70px;"></div>
-            </div>
-        `;
+        app.innerHTML = `<div class="step active-step"><h2>❤️‍🔥 Le jeu du refus</h2><div class="refusal-area"><button class="btn-yes" id="yesBtn">❤️ Bien sûr 🌹</button><button class="btn-no" id="noBtn">🙈 Non</button></div><div id="badboyMsg" style="text-align:center; margin-top:1rem;"></div></div>`;
         const noBtn = document.getElementById('noBtn');
         const yesBtn = document.getElementById('yesBtn');
         const msgDiv = document.getElementById('badboyMsg');
-        const phrases = [
-            "T’as déjà vu un gangster accepter un non ? Moi non plus.",
-            "Ce bouton ? Juste une légende urbaine.",
-            "Désolé princesse, mais ton cœur a déjà répondu.",
-            "T’es mignonne à essayer… mais c’est OUI."
-        ];
-        let evadeCount = 0;
+        const phrases = ["T’as déjà vu un gangster accepter un non ? Moi non plus.","Ce bouton ? Juste une légende urbaine.","Désolé princesse, mais ton cœur a déjà répondu.","T’es mignonne à essayer… mais c’est OUI."];
+        let evade=0;
         function moveNo() {
-            if(evadeCount>=4) {
-                if(noBtn){
-                    noBtn.style.transform = 'scale(0)';
-                    setTimeout(()=>{
-                        noBtn.remove();
-                        msgDiv.innerHTML = "Bon d’accord… Mais t’as capté l’idée 😏";
-                    },100);
-                }
-                return;
-            }
-            const x = Math.random() * (window.innerWidth - 150);
-            const y = Math.random() * (window.innerHeight - 100);
-            if(noBtn) {
-                noBtn.style.position = 'fixed';
-                noBtn.style.left = `${x}px`;
-                noBtn.style.top = `${y}px`;
-                msgDiv.innerHTML = phrases[evadeCount % phrases.length];
-                evadeCount++;
-                const bubble = document.createElement('div');
-                bubble.className = 'badboy-bubble';
-                bubble.innerText = phrases[evadeCount-1];
-                bubble.style.left = x-20+'px';
-                bubble.style.top = y-30+'px';
-                document.body.appendChild(bubble);
-                setTimeout(()=>bubble.remove(),1500);
-            }
+            if(evade>=4) { if(noBtn){ noBtn.style.transform='scale(0)'; msgDiv.innerHTML="Bon d’accord… Mais t’as capté l’idée 😏"; } return; }
+            const x=Math.random()*(window.innerWidth-150), y=Math.random()*(window.innerHeight-100);
+            if(noBtn){ noBtn.style.position='fixed'; noBtn.style.left=x+'px'; noBtn.style.top=y+'px'; msgDiv.innerHTML=phrases[evade%phrases.length]; evade++; }
         }
-        if(noBtn) {
-            noBtn.addEventListener('mouseenter', moveNo);
-            noBtn.addEventListener('click', (e)=>{
-                e.preventDefault();
-                moveNo();
-            });
-        }
-        yesBtn?.addEventListener('click',()=>{
-            for(let i=0;i<80;i++) starExplosion();
-            document.body.style.background = 'radial-gradient(circle, #4a1a2e, #0A0A0A)';
-            setTimeout(()=>{
-                document.body.style.background = '';
-            },2000);
-            nextStep();
-        });
-        function starExplosion(){
-            const star = document.createElement('div');
-            star.innerHTML = '✨';
-            star.style.position='fixed';
-            star.style.left=Math.random()*window.innerWidth+'px';
-            star.style.top=Math.random()*window.innerHeight+'px';
-            star.style.fontSize='20px';
-            star.style.pointerEvents='none';
-            star.style.zIndex=999;
-            star.style.animation='fadeSlide 0.5s ease-out forwards';
-            document.body.appendChild(star);
-            setTimeout(()=>star.remove(),800);
-        }
+        if(noBtn) { noBtn.addEventListener('mouseenter', moveNo); noBtn.addEventListener('click', moveNo); }
+        yesBtn?.addEventListener('click',()=>{ for(let i=0;i<60;i++) starExplosion(); nextStep(); });
+        function starExplosion(){ const s=document.createElement('div'); s.innerHTML='✨'; s.style.position='fixed'; s.style.left=Math.random()*window.innerWidth+'px'; s.style.top=Math.random()*window.innerHeight+'px'; s.style.pointerEvents='none'; document.body.appendChild(s); setTimeout(()=>s.remove(),800); }
     }
     
     function renderStep2() {
-        app.innerHTML = `
-            <div class="step active-step">
-                <h2>Choisis notre échappée</h2>
-                <div class="cards">
-                    <div class="dest-card" data-dest="Marseille">🌊 Marseille<br><span style="font-size:12px">Là où le sel...</span></div>
-                    <div class="dest-card" data-dest="Venise">🛶 Venise<br><span style="font-size:12px">Les canaux murmurent...</span></div>
-                </div>
-                <div id="quoteCity" style="margin-top:1rem; text-align:center;font-style:italic"></div>
-                <button class="btn-chapter" id="confirmCity" style="margin-top:1.5rem">Suivant</button>
-            </div>
-        `;
+        app.innerHTML = `<div class="step active-step"><h2>🌍 Choisis notre échappée</h2><div class="cards"><div class="dest-card" data-dest="Marseille"><div class="city-image" style="background-image:url('https://images.unsplash.com/photo-1533105079780-92b9be482077?w=300&h=150&fit=crop')"></div><span>🌊 Marseille</span></div><div class="dest-card" data-dest="Venise"><div class="city-image" style="background-image:url('https://images.unsplash.com/photo-1533481405265-e9ce0c044abb?w=300&h=150&fit=crop')"></div><span>🛶 Venise</span></div></div><div id="quoteCity" style="margin-top:1rem; text-align:center;"></div><div class="button-group"><button class="btn-chapter btn-secondary" id="prevStep">◀ RETOUR</button><button class="btn-chapter" id="confirmCity">SUIVANT 🌹</button></div></div>`;
         const cards = document.querySelectorAll('.dest-card');
         const quoteDiv = document.getElementById('quoteCity');
-        cards.forEach(card=>{
-            card.addEventListener('mouseenter',()=>{
-                const city = card.getAttribute('data-dest');
-                if(city === 'Marseille') quoteDiv.innerText = '"Là où le sel se mêle à ta peau… un baiser a le goût de l’éternité."';
-                else quoteDiv.innerText = '"Les canaux murmurent ton prénom la nuit. J’y croiserai ton reflet."';
+        cards.forEach(c=>{
+            c.addEventListener('mouseenter',()=>{
+                const city=c.getAttribute('data-dest');
+                quoteDiv.innerText = city==='Marseille' ? '"Le soleil se couche sur Marseille, mais mes pensées restent avec toi."' : '"Venise est belle, mais elle le serait davantage avec toi."';
             });
-            card.addEventListener('click',()=>{
-                userData.destination = card.getAttribute('data-dest');
-                confettisGolden();
-                playViolinNote();
-                cards.forEach(c=>c.style.border='1px solid #D4AF37');
-                card.style.border='3px solid gold';
+            c.addEventListener('click',()=>{
+                userData.destination=c.getAttribute('data-dest'); playViolinNote(); 
+                cards.forEach(card=>card.style.border='1px solid #D4AF37'); c.style.border='3px solid gold';
             });
         });
-        document.getElementById('confirmCity')?.addEventListener('click',()=>{
-            if(userData.destination) nextStep();
-            else alert("Choisis une ville, mon rebelle romantique.");
-        });
-        function confettisGolden(){
-            for(let i=0;i<30;i++){
-                const conf=document.createElement('div');
-                conf.innerHTML='✨';
-                conf.style.position='fixed';
-                conf.style.left=Math.random()*window.innerWidth+'px';
-                conf.style.top='0px';
-                conf.style.fontSize='16px';
-                conf.style.transition='all 1s';
-                setTimeout(()=>{conf.style.transform=`translateY(${window.innerHeight}px) rotate(360deg)`;},10);
-                document.body.appendChild(conf);
-                setTimeout(()=>conf.remove(),1000);
-            }
-        }
+        document.getElementById('confirmCity')?.addEventListener('click',()=>{ if(userData.destination) nextStep(); else alert("Choisis une ville."); });
+        document.getElementById('prevStep')?.addEventListener('click', prevStep);
     }
     
     function renderStep3() {
-        app.innerHTML = `
-            <div class="step active-step">
-                <h2>📅 La date au cœur brûlant</h2>
-                <div class="cards">
-                    <div class="dest-card" data-date="26 juillet">✨ 26 Juillet</div>
-                    <div class="dest-card" data-date="27 juillet">🔥 27 Juillet</div>
-                </div>
-                <div id="ringAnim"></div>
-                <button class="btn-chapter" id="confirmDate">Suivant</button>
-            </div>
-        `;
-        const dateDivs = document.querySelectorAll('[data-date]');
-        dateDivs.forEach(d=>{
+        app.innerHTML = `<div class="step active-step"><h2>📅 La date au cœur brûlant</h2><div class="cards"><div class="dest-card" data-date="26 juillet">✨ 26 Juillet</div><div class="dest-card" data-date="27 juillet">🔥 27 Juillet</div><div class="dest-card" data-date="28 juillet">🌙 28 Juillet</div></div><div id="ringAnim" style="text-align:center; min-height:60px;"></div><div class="button-group"><button class="btn-chapter btn-secondary" id="prevStep">◀ RETOUR</button><button class="btn-chapter" id="confirmDate">SUIVANT 🌹</button></div></div>`;
+        const dates = document.querySelectorAll('[data-date]');
+        dates.forEach(d=>{
             d.addEventListener('click',()=>{
-                userData.date = d.getAttribute('data-date');
-                const ring = document.getElementById('ringAnim');
-                ring.innerHTML = '💍';
-                ring.style.fontSize='3rem';
-                ring.style.animation='fadeSlide 0.4s';
-                setTimeout(()=>ring.innerHTML='',1000);
+                userData.date=d.getAttribute('data-date'); 
+                document.getElementById('ringAnim').innerHTML='💍'; setTimeout(()=>document.getElementById('ringAnim').innerHTML='',1000); 
                 playViolinNote();
-                dateDivs.forEach(c=>c.style.border='1px solid #D4AF37');
-                d.style.border='3px solid gold';
+                dates.forEach(c=>c.style.border='1px solid #D4AF37'); d.style.border='3px solid gold';
             });
         });
-        document.getElementById('confirmDate')?.addEventListener('click',()=>{
-            if(userData.date) nextStep();
-            else alert("Sélectionne un jour, Muri.");
-        });
+        document.getElementById('confirmDate')?.addEventListener('click',()=>{ if(userData.date) nextStep(); else alert("Choisis une date"); });
+        document.getElementById('prevStep')?.addEventListener('click', prevStep);
     }
     
     function renderStep4() {
-        const activitiesList = ["🩶 Plage","⛵ Bateau","🌅 Coucher de soleil","🍷 Dîner romantique","🌙 Balade nocturne","📸 Photos souvenirs","🎭 Découverte culturelle","🎹 Musique live","💃 Danse sous les étoiles","🏊 Nage","🍸 Apéritif face à la mer","🎨 Activités artistiques","👗 Stylisme / mode","🕯️ Surprise secrète","🌀 Moment improvisé"];
-        app.innerHTML = `
-            <div class="step active-step">
-                <h2>🎨 Nos activités magiques</h2>
-                <div class="chips-container" id="chipsList"></div>
-                <div id="selectedBadges" style="margin:1rem 0;"></div>
-                <button class="btn-chapter" id="nextAct">Suivant</button>
-            </div>
-        `;
+        const actList = ["🩶 Plage","⛵ Bateau","🌅 Coucher de soleil","🍷 Dîner romantique","🌙 Balade nocturne","📸 Photos souvenirs","🎭 Découverte culturelle","🎹 Musique live","💃 Danse sous les étoiles","🏊 Nage","🍸 Apéritif face à la mer","🎨 Activités artistiques","👗 Stylisme / mode","🕯️ Surprise secrète","🌀 Moment improvisé"];
+        app.innerHTML = `<div class="step active-step"><h2>🎨 Nos activités magiques</h2><div class="chips-container" id="chipsList"></div><div id="selectedBadges"></div><div class="button-group"><button class="btn-chapter btn-secondary" id="prevStep">◀ RETOUR</button><button class="btn-chapter" id="nextAct">SUIVANT 🌹</button></div></div>`;
         const chipsDiv = document.getElementById('chipsList');
-        activitiesList.forEach(act=>{
-            const chip = document.createElement('div');
-            chip.className = 'chip';
-            chip.innerText = act;
+        actList.forEach(act=>{
+            const chip=document.createElement('div'); chip.className='chip'; chip.innerText=act;
             chip.addEventListener('click',()=>{
-                if(userData.activities.includes(act)){
-                    userData.activities = userData.activities.filter(a=>a!==act);
-                    chip.classList.remove('selected');
-                } else {
-                    userData.activities.push(act);
-                    chip.classList.add('selected');
-                    playViolinNote();
-                    createGoldTrail();
-                }
+                if(userData.activities.includes(act)){ userData.activities=userData.activities.filter(a=>a!==act); chip.classList.remove('selected'); }
+                else{ userData.activities.push(act); chip.classList.add('selected'); playViolinNote(); createGoldTrail(); }
                 updateBadges();
-                saveToLocal();
             });
             chipsDiv.appendChild(chip);
         });
-        function updateBadges(){
-            const badgeDiv = document.getElementById('selectedBadges');
-            badgeDiv.innerHTML = userData.activities.map(a=>`<span class="badge-act">${a}</span>`).join('');
-        }
-        function createGoldTrail(){
-            const trail = document.createElement('div');
-            trail.className='gold-trail';
-            trail.style.left=(Math.random()*window.innerWidth)+'px';
-            trail.style.top=(Math.random()*window.innerHeight)+'px';
-            document.body.appendChild(trail);
-            setTimeout(()=>trail.remove(),600);
-        }
+        function updateBadges(){ document.getElementById('selectedBadges').innerHTML = userData.activities.map(a=>`<span class="badge-act">${a}</span>`).join(''); }
         updateBadges();
-        document.getElementById('nextAct')?.addEventListener('click',()=>nextStep());
+        document.getElementById('nextAct')?.addEventListener('click', nextStep);
+        document.getElementById('prevStep')?.addEventListener('click', prevStep);
     }
     
     function renderStep5() {
-        app.innerHTML = `
-            <div class="step active-step">
-                <h2>✍️ Message à la cire</h2>
-                <textarea id="loveMsg" rows="5" placeholder="Écris ton message... Ton parfum sur ma veste en cuir..."></textarea>
-                <div style="margin-top:8px;">🖤🔥✨ Ce message restera gravé.</div>
-                <button class="btn-chapter" id="saveMsg">Suivant</button>
-            </div>
-        `;
-        const textarea = document.getElementById('loveMsg');
-        textarea.value = userData.message || "";
-        textarea.addEventListener('input',()=>{
-            userData.message = textarea.value;
-            saveToLocal();
-            if(userData.message.includes("stylisme") || userData.message.includes("mode")){
-                for(let i=0;i<5;i++){
-                    const hanger = document.createElement('div');
-                    hanger.innerHTML = '🪝';
-                    hanger.style.position='fixed';
-                    hanger.style.left=Math.random()*window.innerWidth+'px';
-                    hanger.style.top=Math.random()*window.innerHeight+'px';
-                    hanger.style.fontSize='2rem';
-                    hanger.style.animation='fadeSlide 1s forwards';
-                    document.body.appendChild(hanger);
-                    setTimeout(()=>hanger.remove(),1500);
-                }
+        app.innerHTML = `<div class="step active-step"><h2>✍️ MESSAGE À LA CIRE 💋</h2><p>💌 Raconte-moi ta date parfaite...<br>💓 "nkumbuye kumva ngena umota my lv" 💓<br>Je veux tout savoir, jusqu'au dernier détail.<br>Je veux tout savoir, jusqu'au dernier détail.</p><textarea id="loveMsg" rows="5" placeholder="écris ici ton histoire, ton rêve..."></textarea><div class="char-counter"><span id="charCount">0</span> caractères <span id="heartBeat" class="beating-heart">💓</span></div><p>💋 Un baiser scelle nos promesses...<br>🖤 Ce message restera gravé. Comme ton parfum sur ma veste en cuir.</p><div class="button-group"><button class="btn-chapter btn-secondary" id="prevStep">◀ RETOUR</button><button class="btn-chapter" id="saveMsg">SUIVANT 🌹</button></div></div>`;
+        const ta = document.getElementById('loveMsg');
+        ta.value = userData.message || "";
+        const counter = document.getElementById('charCount');
+        const heart = document.getElementById('heartBeat');
+        function updateCounter(){
+            const len = ta.value.length;
+            counter.innerText = len;
+            if(len>50){ heart.style.animation='heartbeat 0.5s infinite'; if(len>70) for(let i=0;i<5;i++) createGoldTrail(); }
+            else heart.style.animation='heartbeat 1s infinite';
+            if(ta.value.includes("je t'aime")||ta.value.includes("Muri")){
+                for(let i=0;i<10;i++){ const p=document.createElement('div'); p.innerHTML='🌹'; p.style.position='fixed'; p.style.left=Math.random()*window.innerWidth+'px'; p.style.top=Math.random()*window.innerHeight+'px'; p.style.pointerEvents='none'; document.body.appendChild(p); setTimeout(()=>p.remove(),2000);}
             }
-        });
-        document.getElementById('saveMsg')?.addEventListener('click',()=>nextStep());
+            userData.message = ta.value;
+            saveToLocal();
+        }
+        ta.addEventListener('input', updateCounter);
+        updateCounter();
+        document.getElementById('saveMsg')?.addEventListener('click', nextStep);
+        document.getElementById('prevStep')?.addEventListener('click', prevStep);
     }
     
     function renderFinal() {
         const destQuote = userData.destination === 'Marseille' ? "Le Mistral portera nos rires" : "Le gondolier chantera pour toi";
-        app.innerHTML = `
-            <div class="step active-step">
-                <h2>🌌 Destin Croisé</h2>
-                <div style="background:#0B1E33; padding:1rem; border-radius: 32px;">
-                    <p>📍 ${userData.destination || '?'}</p>
-                    <p>📅 ${userData.date || '?'}</p>
-                    <p>🎭 Activités: ${userData.activities.join(', ') || 'aucune'}</p>
-                    <p>💌 Message: "${userData.message || '...'}"</p>
-                    <p>✨ ${destQuote}</p>
-                </div>
-                <button class="btn-chapter" id="sendFinal">💖 Envoyer ma réponse</button>
-            </div>
-        `;
-        document.getElementById('sendFinal')?.addEventListener('click',async()=>{
-            heartbeatBass();
-            const roseSpan = document.createElement('div');
-            roseSpan.innerHTML = '🌹✨';
-            roseSpan.style.position='fixed'; roseSpan.style.fontSize='6rem'; roseSpan.style.left='50%'; roseSpan.style.top='50%'; roseSpan.style.transform='translate(-50%,-50%)'; roseSpan.style.zIndex=1000; roseSpan.style.transition='all 1s';
-            document.body.appendChild(roseSpan);
-            setTimeout(()=>roseSpan.style.transform='translate(-50%,-80%) scale(2) rotate(20deg)',10);
-            setTimeout(()=>roseSpan.remove(),2000);
-            const formData = new FormData();
-            formData.append('destination', userData.destination);
-            formData.append('date', userData.date);
-            formData.append('activities', userData.activities.join(','));
-            formData.append('message', userData.message);
-            try{
-                await fetch('https://formspree.io/f/mkinezae', { method: 'POST', body: formData, headers:{'Accept':'application/json'} });
-                alert("Ton destin est scellé, rebelle romantique. 💘");
-            } catch(e){ alert("Message sauvegardé localement. Ton destin t'attend.");}
-        });
+        app.innerHTML = `<div class="step active-step"><h2>🌌 Destin Croisé</h2><div style="background:#0B1E33; padding:1rem; border-radius:32px;"><p>📍 ${userData.destination||'?'}</p><p>📅 ${userData.date||'?'}</p><p>🎭 Activités: ${userData.activities.join(', ')||'aucune'}</p><p>💌 Message: "${userData.message||'...'}"</p><p>✨ ${destQuote}</p><p style="margin-top:1rem;">"Un an plus tard, je ne cherche plus l'amour, je constate ce qu'il est devenu."</p></div><div class="button-group"><button class="btn-chapter btn-secondary" id="prevStep">◀ RETOUR</button><button class="btn-chapter" id="sendFinal">💖 Envoyer ma réponse 🌹</button></div></div>`;
+        document.getElementById('sendFinal')?.addEventListener('click',()=>{ heartbeatBass(); alert("Ton destin est scellé, rebelle romantique. 💘"); });
+        document.getElementById('prevStep')?.addEventListener('click', prevStep);
     }
     
+    // Canvas arrière plan + étoiles
     function setupCanvas(){
         const canvas = document.getElementById('bgCanvas');
         const ctx = canvas.getContext('2d');
-        let w=window.innerWidth, h=window.innerHeight;
-        let stars = Array(150).fill().map(()=>({x:Math.random()*w, y:Math.random()*h, r:Math.random()*2, alpha:Math.random()}));
-        function resize(){ canvas.width=w=window.innerWidth; canvas.height=h=window.innerHeight; }
+        let w, h;
+        function resize(){ w=canvas.width=window.innerWidth; h=canvas.height=window.innerHeight; }
         window.addEventListener('resize',resize); resize();
-        let time=0;
+        let stars = Array(200).fill().map(()=>({x:Math.random()*w, y:Math.random()*h, r:Math.random()*2, alpha:Math.random()*0.5}));
         function draw(){
             if(!ctx) return;
             ctx.clearRect(0,0,w,h);
-            ctx.fillStyle = "#0A0A0A";
-            ctx.fillRect(0,0,w,h);
-            for(let i=0;i<4;i++){
-                ctx.beginPath();
-                ctx.moveTo(0, h*0.7 + Math.sin(time*0.005 + i)*20 + i*12);
-                for(let x=0;x<w;x+=20){
-                    let y = h*0.7 + Math.sin(x*0.01 + time*0.003 + i)*15 + i*10;
-                    ctx.lineTo(x,y);
-                }
-                ctx.lineTo(w,h);
-                ctx.lineTo(0,h);
-                ctx.fillStyle = `rgba(11,30,51,0.2)`;
-                ctx.fill();
-            }
-            stars.forEach(s=>{
-                ctx.fillStyle = `rgba(255,215,0,${s.alpha})`;
-                ctx.beginPath(); ctx.arc(s.x, s.y, s.r,0,Math.PI*2); ctx.fill();
-                s.x -= 0.5; if(s.x<0) s.x=w;
-            });
+            stars.forEach(s=>{ ctx.fillStyle=`rgba(255,215,0,${s.alpha})`; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill(); s.x-=0.3; if(s.x<0) s.x=w; });
             requestAnimationFrame(draw);
-            time++;
         }
         draw();
-        document.addEventListener('mousemove',(e)=>{
-            if(audioCtx && !toggleMuted){
-                const sensZone = (e.clientY / h);
-                if(sensZone < 0.3){
-                    currentPianoVol = 0.5;
-                    updatePianoVolume(0.5);
-                } else {
-                    currentPianoVol = 0.3;
-                    updatePianoVolume(0.3);
-                }
-            }
-        });
+        document.addEventListener('mousemove',(e)=>{ if(audioCtx && !toggleMuted){ const zone = e.clientY/h; currentPianoVol = zone<0.3 ? 0.5 : 0.3; updatePianoVolume(currentPianoVol); } });
     }
-    
-    let clickCount=0;
+    // Triple clic mode braise
+    let clickTimer=0;
     document.addEventListener('click',(e)=>{
-        if(!audioEnabled && e.target.closest('#audioToggle')===null){
-            initAudio();
-            audioEnabled=true;
-            if(audioCtx) audioCtx.resume();
-            updatePianoVolume(0.3);
-            updateWaveVolume(0.12);
-        }
-        if(e.detail===3){
-            clickCount++;
-            setTimeout(()=>clickCount=0,500);
-            if(clickCount===3){
-                braiseActive=!braiseActive;
-                if(braiseActive) document.body.classList.add('braise-mode');
-                else document.body.classList.remove('braise-mode');
-                for(let i=0;i<30;i++){
-                    const flame=document.createElement('div');
-                    flame.innerHTML='🔥';
-                    flame.style.position='fixed';
-                    flame.style.left=Math.random()*window.innerWidth+'px';
-                    flame.style.top=Math.random()*window.innerHeight+'px';
-                    flame.style.fontSize='24px';
-                    flame.style.pointerEvents='none';
-                    document.body.appendChild(flame);
-                    setTimeout(()=>flame.remove(),1000);
-                }
-                saveToLocal();
-            }
-        }
+        if(!audioEnabled && !e.target.closest('#audioToggle')){ initAudio(); audioEnabled=true; if(audioCtx) audioCtx.resume(); updatePianoVolume(0.3); }
+        clickTimer++;
+        setTimeout(()=>clickTimer=0,500);
+        if(clickTimer===3){ braiseActive=!braiseActive; if(braiseActive) document.body.classList.add('braise-mode'); else document.body.classList.remove('braise-mode'); for(let i=0;i<30;i++){ const f=document.createElement('div'); f.innerHTML='🔥'; f.style.position='fixed'; f.style.left=Math.random()*w+'px'; f.style.top=Math.random()*h+'px'; f.style.pointerEvents='none'; document.body.appendChild(f); setTimeout(()=>f.remove(),1000); } saveToLocal(); }
     });
-    
     const toggleBtn = document.getElementById('audioToggle');
-    toggleBtn?.addEventListener('click',()=>{
-        toggleMuted = !toggleMuted;
-        if(audioCtx){
-            if(toggleMuted){
-                pianoGain.gain.value = 0;
-                waveGain.gain.value = 0;
-                violinGain.gain.value=0;
-            } else {
-                updatePianoVolume(currentPianoVol);
-                updateWaveVolume(0.12);
-            }
-        }
-        toggleBtn.innerText = toggleMuted ? '🔇' : '🎧';
-    });
+    toggleBtn?.addEventListener('click',()=>{ toggleMuted=!toggleMuted; if(audioCtx){ if(toggleMuted){ pianoGain.gain.value=0; waveGain.gain.value=0; violinGain.gain.value=0; } else { updatePianoVolume(currentPianoVol); waveGain.gain.value=0.12; } } toggleBtn.innerText=toggleMuted?'🔇':'🎧'; });
     
     loadLocal();
     setupCanvas();
