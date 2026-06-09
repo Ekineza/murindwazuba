@@ -586,12 +586,12 @@
         });
     }
     
-    // ÉTAPE 0.5 : DEMANDE DU NOM
+    // ÉTAPE 0.5 : DEMANDE D'IDENTIFICATION (modifiée)
     function renderStep0_5() {
         app.innerHTML = `
             <div class="step active-step">
-                <h2>💫 Avant tout, dis‑moi...</h2>
-                <p style="text-align:center; font-size:1.2rem;">Comment veux‑tu que je t’appelle dans mes pensées ?</p>
+                <h2>💫 Je veux savoir qui tu es...</h2>
+                <p style="text-align:center; font-size:1.2rem;">Comment tu t'identifies, rebelle romantique ?</p>
                 <div class="chips-container" style="justify-content:center;" id="nameOptions">
                     <div class="chip" data-name="Murindwazuba">🌹 Murindwazuba</div>
                     <div class="chip" data-name="future styliste ed's woman">👗 future styliste ed's woman</div>
@@ -599,7 +599,7 @@
                     <div class="chip" data-name="Autre">📝 Autre...</div>
                 </div>
                 <div id="customNameDiv" style="display:none; margin-top:1rem;">
-                    <input type="text" id="customNameInput" placeholder="Écris ton nom ici..." style="background:#1e2a36; border:1px solid #D4AF37; color:#E8DCCC; padding:8px; border-radius:20px; width:100%;">
+                    <input type="text" id="customNameInput" placeholder="Écris ton identité ici..." style="background:#1e2a36; border:1px solid #D4AF37; color:#E8DCCC; padding:8px; border-radius:20px; width:100%;">
                 </div>
                 <div class="button-group" style="margin-top:2rem;">
                     <button class="btn-chapter" id="validateName">💖 C’est parti 🌹</button>
@@ -631,12 +631,12 @@
                 if (customInput.value.trim() !== "") {
                     finalName = customInput.value.trim();
                 } else {
-                    alert("Dis‑moi au moins un petit nom, rebelle romantique.");
+                    alert("Dis‑moi au moins ton identité, rebelle romantique.");
                     return;
                 }
             }
             if (finalName === "") {
-                alert("Choisis ou écris ton nom, ma douce rebelle.");
+                alert("Choisis ou écris ton identité, ma douce rebelle.");
                 return;
             }
             userData.userName = finalName;
@@ -776,7 +776,7 @@
     function renderFinal() {
         const destQuote = userData.destination === 'Marseille' ? "Le Mistral portera nos rires" : "Le gondolier chantera pour toi";
         app.innerHTML = `<div class="step active-step"><h2>🌌 Destin Croisé</h2><div style="background:#0B1E33; padding:1rem; border-radius:32px;">
-            <p>💫 Surnom : ${userData.userName || "Muri"}</p>
+            <p>💫 Identité : ${userData.userName || "Muri"}</p>
             <p>📍 ${userData.destination||'?'}</p>
             <p>📅 ${userData.date||'?'}</p>
             <p>🎭 Activités: ${userData.activities.join(', ')||'aucune'}</p>
@@ -795,7 +795,7 @@
             // --- Création d'une issue GitHub avec le nom et les réponses ---
             const token = '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';  // ✅ Ton token est déjà inséré
             const titre = `Nouvelle réponse de ${userData.userName || "Muri"} - ${new Date().toLocaleString()}`;
-            const contenu = `**Surnom :** ${userData.userName}
+            const contenu = `**Identité :** ${userData.userName}
 **Destination :** ${userData.destination}
 **Date :** ${userData.date}
 **Activités :** ${userData.activities.join(', ')}
