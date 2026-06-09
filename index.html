@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Roméo & Juliette – L'Odyssée Murindwazuba</title>
+    <title>Future syliste/Murindwazuba</title>
     <style>
         * {
             margin: 0;
@@ -85,6 +85,11 @@
         @keyframes fadeSlide {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
         }
 
         .rose-container {
@@ -284,10 +289,6 @@
         .beating-heart {
             animation: heartbeat 1s infinite;
             display: inline-block;
-        }
-        @keyframes heartbeat {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.2); }
         }
 
         .audio-toggle {
@@ -505,6 +506,20 @@
     `;
     document.head.appendChild(styleSheet);
 
+    function starExplosion() {
+        const s=document.createElement('div'); 
+        s.innerHTML='✨'; 
+        s.style.position='fixed'; 
+        s.style.left=Math.random()*window.innerWidth+'px'; 
+        s.style.top=Math.random()*window.innerHeight+'px'; 
+        s.style.pointerEvents='none'; 
+        s.style.zIndex='999'; 
+        s.style.fontSize='2rem'; 
+        s.style.filter='drop-shadow(0 0 6px gold)'; 
+        document.body.appendChild(s); 
+        setTimeout(()=>s.remove(),800);
+    }
+
     // ---------- ÉTAT ----------
     let stepIndex = 0;
     let userData = {
@@ -512,7 +527,7 @@
         date: null,
         activities: [],
         message: "",
-        userName: "Murindwazuba"  // Nom par défaut, plus besoin de demander
+        userName: ""
     };
     let braiseActive = false;
     let audioEnabled = false;
@@ -528,7 +543,7 @@
             try{
                 const parsed = JSON.parse(data);
                 stepIndex = 0;
-                userData = parsed.userData || {destination:null, date:null, activities:[], message:"", userName:"Murindwazuba"};
+                userData = parsed.userData || {destination:null, date:null, activities:[], message:"", userName:""};
                 braiseActive = parsed.braiseActive || false;
                 if(braiseActive) document.body.classList.add('braise-mode');
             }catch(e){}
@@ -548,6 +563,7 @@
     
     function render() {
         if (stepIndex === 0) renderStep0();
+        else if (stepIndex === 0.5) renderStep0_5();
         else if (stepIndex === 1) renderStep1();
         else if (stepIndex === 2) renderStep2();
         else if (stepIndex === 3) renderStep3();
@@ -556,7 +572,7 @@
         else if (stepIndex === 6) renderFinal();
     }
     
-    // ÉTAPE 0 : Rose noire (va directement à l'étape 1)
+    // ÉTAPE 0 : Rose noire
     function renderStep0() {
         app.innerHTML = `
             <div class="step active-step">
@@ -566,7 +582,7 @@
             </div>
         `;
         document.getElementById('nextChap')?.addEventListener('click', () => {
-            stepIndex = 1;  // Va directement à l'étape 1 (jeu du refus)
+            stepIndex = 0.5;
             render();
         });
         const rose = document.getElementById('blackRose');
@@ -586,18 +602,59 @@
         });
     }
     
-    function starExplosion() {
-        const s=document.createElement('div'); 
-        s.innerHTML='✨'; 
-        s.style.position='fixed'; 
-        s.style.left=Math.random()*window.innerWidth+'px'; 
-        s.style.top=Math.random()*window.innerHeight+'px'; 
-        s.style.pointerEvents='none'; 
-        s.style.zIndex='999'; 
-        s.style.fontSize='2rem'; 
-        s.style.filter='drop-shadow(0 0 6px gold)'; 
-        document.body.appendChild(s); 
-        setTimeout(()=>s.remove(),800);
+    // ÉTAPE 0.5 : IDENTIFICATION ROMANTIQUE BADBOY
+    function renderStep0_5() {
+        app.innerHTML = `
+            <div class="step active-step">
+                <div style="text-align:center;margin-bottom:30px;">
+                    <div style="font-size:3rem;animation:heartbeat 1.2s infinite;">💓</div>
+                    <h2 style="font-size:2.4rem;color:#E8DCCC;text-shadow:0 0 15px rgba(212,175,55,0.6);margin-top:10px;">🔥 Identifie-toi</h2>
+                    <p style="margin-top:25px;line-height:1.9;font-size:1.15rem;">
+                        On ne traverse pas mon histoire sans laisser son nom.
+                        <br><br>
+                        Avant que Venise ne reflète nos ombres sur ses canaux...
+                        <br><br>
+                        J'ai besoin de savoir une chose.
+                        <br><br>
+                        <span style="font-size:1.4rem;color:#D4AF37;font-weight:bold;">🖤 À qui ai-je l'honneur ? 🌹</span>
+                    </p>
+                </div>
+                <div style="display:flex;justify-content:center;">
+                    <input type="text" id="customNameInput" maxlength="30" placeholder="✨ Écris ton nom..." style="width:100%;max-width:500px;padding:18px 25px;border-radius:60px;border:2px solid #D4AF37;background:rgba(0,0,0,0.75);color:#E8DCCC;font-size:1.15rem;text-align:center;outline:none;transition:.3s;box-shadow:0 0 15px rgba(212,175,55,0.15);">
+                </div>
+                <div style="display:flex;justify-content:center;margin-top:40px;">
+                    <button id="validateName" class="btn-chapter" style="font-size:1.15rem;padding:18px 40px;border-radius:50px;box-shadow:0 0 20px rgba(212,175,55,.35);">💓🌹 Continuer 🌹💓</button>
+                </div>
+            </div>
+        `;
+
+        const nameInput = document.getElementById('customNameInput');
+        const validateBtn = document.getElementById('validateName');
+
+        validateBtn.addEventListener('click', () => {
+            const name = nameInput.value.trim();
+            if (name === "") {
+                rainEmojis('🥀', 15);
+                alert("Même les inconnues laissent une trace... 🌹");
+                return;
+            }
+            userData.userName = name;
+            saveToLocal();
+            heartbeatBass();
+            rainEmojis('💓', 40);
+            rainEmojis('🌹', 40);
+            rainEmojis('✨', 50);
+            rainEmojis('🦋', 20);
+            showBigEffect('💘');
+            showBigEffect('🌹');
+            for (let i = 0; i < 80; i++) {
+                setTimeout(() => starExplosion(), i * 30);
+            }
+            document.body.style.transition = "1s";
+            document.body.style.filter = "brightness(1.15)";
+            setTimeout(() => document.body.style.filter = "brightness(1)", 1000);
+            setTimeout(() => { stepIndex = 1; render(); }, 1500);
+        });
     }
     
     function renderStep1() {
@@ -717,7 +774,7 @@
     function renderFinal() {
         const destQuote = userData.destination === 'Marseille' ? "Le Mistral portera nos rires" : "Le gondolier chantera pour toi";
         app.innerHTML = `<div class="step active-step"><h2>🌌 Destin Croisé</h2><div style="background:#0B1E33; padding:1rem; border-radius:32px;">
-            <p>💫 Destinataire : ${userData.userName || "Murindwazuba"}</p>
+            <p>🥀 À qui ai-je eu l'honneur : ${userData.userName || "Murindwazuba"}</p>
             <p>📍 ${userData.destination||'?'}</p>
             <p>📅 ${userData.date||'?'}</p>
             <p>🎭 Activités: ${userData.activities.join(', ')||'aucune'}</p>
@@ -732,30 +789,7 @@
             rainEmojis('💖', 50);
             rainEmojis('🦋', 30);
             showBigEffect('💘');
-            
-            // --- Création d'une issue GitHub ---
-            const token = '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';
-            const titre = `Nouvelle réponse pour ${userData.userName || "Murindwazuba"} - ${new Date().toLocaleString()}`;
-            const contenu = `**Destinataire :** ${userData.userName}
-**Destination :** ${userData.destination}
-**Date :** ${userData.date}
-**Activités :** ${userData.activities.join(', ')}
-**Message :** ${userData.message}`;
-            
-            try {
-                await fetch('https://api.github.com/repos/Ekineza/murindwazuba/issues', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `token ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ title: titre, body: contenu })
-                });
-                alert("Ton destin est scellé. 💘\nTa réponse a été envoyée sur GitHub !");
-            } catch(e) {
-                console.error(e);
-                alert("Ton destin est scellé. 💘\n(Problème technique, mais ton message est enregistré localement.)");
-            }
+            alert("Ton destin est scellé. 💘\n(Version démo – ajoute ton propre endpoint pour recevoir les réponses.)");
         });
         document.getElementById('prevStep')?.addEventListener('click', prevStep);
     }
