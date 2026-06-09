@@ -521,12 +521,13 @@
     function saveToLocal() {
         localStorage.setItem('romeo_juliette_muri', JSON.stringify({stepIndex, userData, braiseActive}));
     }
+    
     function loadLocal() {
         const data = localStorage.getItem('romeo_juliette_muri');
         if(data) {
             try{
                 const parsed = JSON.parse(data);
-                stepIndex = parsed.stepIndex || 0;
+                stepIndex = 0;
                 userData = parsed.userData || {destination:null, date:null, activities:[], message:"", userName:""};
                 braiseActive = parsed.braiseActive || false;
                 if(braiseActive) document.body.classList.add('braise-mode');
@@ -586,30 +587,34 @@
         });
     }
     
-    // ÉTAPE 0.5 : DEMANDE D'IDENTIFICATION (modifiée)
+    // ÉTAPE 0.5 : DEMANDE D'IDENTIFICATION (CORRIGÉE)
     function renderStep0_5() {
         app.innerHTML = `
             <div class="step active-step">
                 <h2>💫 Je veux savoir qui tu es...</h2>
-                <p style="text-align:center; font-size:1.2rem;">Comment tu t'identifies, rebelle romantique ?</p>
+                <p style="text-align:center; font-size:1.2rem;">Comment tu t'identifies ?</p>
                 <div class="chips-container" style="justify-content:center;" id="nameOptions">
                     <div class="chip" data-name="Murindwazuba">🌹 Murindwazuba</div>
                     <div class="chip" data-name="future styliste ed's woman">👗 future styliste ed's woman</div>
+                    <div class="chip" data-name="ed's wife">💍 ed's wife</div>
                     <div class="chip" data-name="Mon étoile">✨ Mon étoile</div>
-                    <div class="chip" data-name="Autre">📝 Autre...</div>
+                    <div class="chip" data-name="Autre">📝 Autres personnes...</div>
                 </div>
                 <div id="customNameDiv" style="display:none; margin-top:1rem;">
                     <input type="text" id="customNameInput" placeholder="Écris ton identité ici..." style="background:#1e2a36; border:1px solid #D4AF37; color:#E8DCCC; padding:8px; border-radius:20px; width:100%;">
                 </div>
                 <div class="button-group" style="margin-top:2rem;">
-                    <button class="btn-chapter" id="validateName">💖 C’est parti 🌹</button>
+                    <button class="btn-chapter" id="validateName">💖 C'est parti 🌹</button>
                 </div>
             </div>
         `;
+        
         const chips = document.querySelectorAll('.chip');
         const customDiv = document.getElementById('customNameDiv');
         const validateBtn = document.getElementById('validateName');
         let selectedName = "";
+        
+        // Sélection d'un chip
         chips.forEach(chip => {
             chip.addEventListener('click', () => {
                 chips.forEach(c => c.classList.remove('selected'));
@@ -624,21 +629,28 @@
                 }
             });
         });
+        
+        // Bouton C'est parti
         validateBtn.addEventListener('click', () => {
             let finalName = selectedName;
+            
+            // Si "Autre" est sélectionné et qu'un texte est écrit
             if (customDiv.style.display === "block") {
                 const customInput = document.getElementById('customNameInput');
                 if (customInput.value.trim() !== "") {
                     finalName = customInput.value.trim();
                 } else {
-                    alert("Dis‑moi au moins ton identité, rebelle romantique.");
+                    alert("Dis‑moi qui tu es, je veux savoir.");
                     return;
                 }
             }
+            
+            // Si rien n'est sélectionné
             if (finalName === "") {
-                alert("Choisis ou écris ton identité, ma douce rebelle.");
+                alert("Choisis ton identité ou écris-la, douce rebelle.");
                 return;
             }
+            
             userData.userName = finalName;
             saveToLocal();
             nextStep();
@@ -792,8 +804,8 @@
             rainEmojis('🦋', 30);
             showBigEffect('💘');
             
-            // --- Création d'une issue GitHub avec le nom et les réponses ---
-            const token = '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';  // ✅ Ton token est déjà inséré
+            // --- Création d'une issue GitHub ---
+            const token = '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';
             const titre = `Nouvelle réponse de ${userData.userName || "Muri"} - ${new Date().toLocaleString()}`;
             const contenu = `**Identité :** ${userData.userName}
 **Destination :** ${userData.destination}
@@ -810,10 +822,10 @@
                     },
                     body: JSON.stringify({ title: titre, body: contenu })
                 });
-                alert("Ton destin est scellé, rebelle romantique. 💘\nTa réponse a été envoyée sur GitHub !");
+                alert("Ton destin est scellé. 💘\nTa réponse a été envoyée sur GitHub !");
             } catch(e) {
                 console.error(e);
-                alert("Ton destin est scellé, rebelle romantique. 💘\n(Problème technique, mais ton message est enregistré localement.)");
+                alert("Ton destin est scellé. 💘\n(Problème technique, mais ton message est enregistré localement.)");
             }
         });
         document.getElementById('prevStep')?.addEventListener('click', prevStep);
