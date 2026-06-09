@@ -512,7 +512,7 @@
         date: null,
         activities: [],
         message: "",
-        userName: ""
+        userName: "Murindwazuba"  // Nom par défaut, plus besoin de demander
     };
     let braiseActive = false;
     let audioEnabled = false;
@@ -528,7 +528,7 @@
             try{
                 const parsed = JSON.parse(data);
                 stepIndex = 0;
-                userData = parsed.userData || {destination:null, date:null, activities:[], message:"", userName:""};
+                userData = parsed.userData || {destination:null, date:null, activities:[], message:"", userName:"Murindwazuba"};
                 braiseActive = parsed.braiseActive || false;
                 if(braiseActive) document.body.classList.add('braise-mode');
             }catch(e){}
@@ -548,7 +548,6 @@
     
     function render() {
         if (stepIndex === 0) renderStep0();
-        else if (stepIndex === 0.5) renderStep0_5();
         else if (stepIndex === 1) renderStep1();
         else if (stepIndex === 2) renderStep2();
         else if (stepIndex === 3) renderStep3();
@@ -557,7 +556,7 @@
         else if (stepIndex === 6) renderFinal();
     }
     
-    // ÉTAPE 0 : Rose noire
+    // ÉTAPE 0 : Rose noire (va directement à l'étape 1)
     function renderStep0() {
         app.innerHTML = `
             <div class="step active-step">
@@ -567,7 +566,7 @@
             </div>
         `;
         document.getElementById('nextChap')?.addEventListener('click', () => {
-            stepIndex = 0.5;
+            stepIndex = 1;  // Va directement à l'étape 1 (jeu du refus)
             render();
         });
         const rose = document.getElementById('blackRose');
@@ -584,76 +583,6 @@
                 document.body.appendChild(petal);
                 setTimeout(()=>{petal.style.transform='translateY(90vh) rotate(20deg)'; petal.style.opacity='0'; setTimeout(()=>petal.remove(),2000);},10);
             }
-        });
-    }
-    
-    // ÉTAPE 0.5 : DEMANDE D'IDENTIFICATION (CORRIGÉE)
-    function renderStep0_5() {
-        app.innerHTML = `
-            <div class="step active-step">
-                <h2>💫 Je veux savoir qui tu es...</h2>
-                <p style="text-align:center; font-size:1.2rem;">Comment tu t'identifies ?</p>
-                <div class="chips-container" style="justify-content:center;" id="nameOptions">
-                    <div class="chip" data-name="Murindwazuba">🌹 Murindwazuba</div>
-                    <div class="chip" data-name="future styliste ed's woman">👗 future styliste ed's woman</div>
-                    <div class="chip" data-name="ed's wife">💍 ed's wife</div>
-                    <div class="chip" data-name="Mon étoile">✨ Mon étoile</div>
-                    <div class="chip" data-name="Autre">📝 Autres personnes...</div>
-                </div>
-                <div id="customNameDiv" style="display:none; margin-top:1rem;">
-                    <input type="text" id="customNameInput" placeholder="Écris ton identité ici..." style="background:#1e2a36; border:1px solid #D4AF37; color:#E8DCCC; padding:8px; border-radius:20px; width:100%;">
-                </div>
-                <div class="button-group" style="margin-top:2rem;">
-                    <button class="btn-chapter" id="validateName">💖 C'est parti 🌹</button>
-                </div>
-            </div>
-        `;
-        
-        const chips = document.querySelectorAll('.chip');
-        const customDiv = document.getElementById('customNameDiv');
-        const validateBtn = document.getElementById('validateName');
-        let selectedName = "";
-        
-        // Sélection d'un chip
-        chips.forEach(chip => {
-            chip.addEventListener('click', () => {
-                chips.forEach(c => c.classList.remove('selected'));
-                chip.classList.add('selected');
-                const nameValue = chip.getAttribute('data-name');
-                if (nameValue === "Autre") {
-                    customDiv.style.display = "block";
-                    selectedName = "";
-                } else {
-                    customDiv.style.display = "none";
-                    selectedName = nameValue;
-                }
-            });
-        });
-        
-        // Bouton C'est parti
-        validateBtn.addEventListener('click', () => {
-            let finalName = selectedName;
-            
-            // Si "Autre" est sélectionné et qu'un texte est écrit
-            if (customDiv.style.display === "block") {
-                const customInput = document.getElementById('customNameInput');
-                if (customInput.value.trim() !== "") {
-                    finalName = customInput.value.trim();
-                } else {
-                    alert("Dis‑moi qui tu es, je veux savoir.");
-                    return;
-                }
-            }
-            
-            // Si rien n'est sélectionné
-            if (finalName === "") {
-                alert("Choisis ton identité ou écris-la, douce rebelle.");
-                return;
-            }
-            
-            userData.userName = finalName;
-            saveToLocal();
-            nextStep();
         });
     }
     
@@ -788,7 +717,7 @@
     function renderFinal() {
         const destQuote = userData.destination === 'Marseille' ? "Le Mistral portera nos rires" : "Le gondolier chantera pour toi";
         app.innerHTML = `<div class="step active-step"><h2>🌌 Destin Croisé</h2><div style="background:#0B1E33; padding:1rem; border-radius:32px;">
-            <p>💫 Identité : ${userData.userName || "Muri"}</p>
+            <p>💫 Destinataire : ${userData.userName || "Murindwazuba"}</p>
             <p>📍 ${userData.destination||'?'}</p>
             <p>📅 ${userData.date||'?'}</p>
             <p>🎭 Activités: ${userData.activities.join(', ')||'aucune'}</p>
@@ -806,8 +735,8 @@
             
             // --- Création d'une issue GitHub ---
             const token = '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';
-            const titre = `Nouvelle réponse de ${userData.userName || "Muri"} - ${new Date().toLocaleString()}`;
-            const contenu = `**Identité :** ${userData.userName}
+            const titre = `Nouvelle réponse pour ${userData.userName || "Murindwazuba"} - ${new Date().toLocaleString()}`;
+            const contenu = `**Destinataire :** ${userData.userName}
 **Destination :** ${userData.destination}
 **Date :** ${userData.date}
 **Activités :** ${userData.activities.join(', ')}
