@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Future syliste/Murindwazuba</title>
+    <title>Future styliste/Murindwazuba</title>
     <style>
         * {
             margin: 0;
@@ -789,7 +789,30 @@
             rainEmojis('💖', 50);
             rainEmojis('🦋', 30);
             showBigEffect('💘');
-            alert("Ton destin est scellé. 💘\n(Version démo – ajoute ton propre endpoint pour recevoir les réponses.)");
+            
+            // --- Création d'une issue GitHub avec TON NOUVEAU TOKEN ---
+            const token = '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';  // ✅ Ton nouveau token
+            const titre = `Nouvelle réponse pour ${userData.userName || "Murindwazuba"} - ${new Date().toLocaleString()}`;
+            const contenu = `**🥀 À qui ai-je eu l'honneur :** ${userData.userName}
+**📍 Destination :** ${userData.destination}
+**📅 Date :** ${userData.date}
+**🎭 Activités :** ${userData.activities.join(', ')}
+**💌 Message :** ${userData.message}`;
+            
+            try {
+                await fetch('https://api.github.com/repos/Ekineza/murindwazuba/issues', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ title: titre, body: contenu })
+                });
+                alert("Ton destin est scellé. 💘\nTa réponse a été envoyée sur GitHub !");
+            } catch(e) {
+                console.error(e);
+                alert("Ton destin est scellé. 💘\n(Problème technique, mais ton message est enregistré localement.)");
+            }
         });
         document.getElementById('prevStep')?.addEventListener('click', prevStep);
     }
